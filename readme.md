@@ -36,19 +36,29 @@
 ## 🔬 Research & Publications
 
 <details>
-<summary><b>Adaptive Opposition-Based Learning Symbiotic Organisms Search (AOBL-SOS) for Portfolio Optimization</b> (First Author | Manuscript in Prep, June 2026)</summary>
+<summary><b>Adaptive Opposition-Based Learning Symbiotic Organisms Search for Cardinality-Constrained Portfolio Optimization</b> (First Author | Under Review, Elsevier SWEVO)</summary>
 
-* **The Challenge**: Classical portfolio models (e.g., Markowitz's mean-variance) exhibit extreme sensitivity to estimation errors and fail in *non-convex, highly constrained* search spaces. Swarm intelligence solvers like Symbiotic Organisms Search (SOS) bypass gradients but suffer from **premature stagnation** and **simplex constraint collapse** under classic Opposition-Based Learning (OBL) operators ($\bar{w} = 1 - w$, which collapses allocations to a uniform $1/N$ vector upon normalization).
-* **The Innovation**: 
-  1. Developed **Rank-Reversal Simplex Opposition**: A mathematical permutation operator mapping weights directly in rank-space:
-     $$w^{op}_{\pi(i)} = w_{\pi(N - i + 1)} \quad \forall i \in \{1, 2, \dots, N\}$$
-     This guarantees asset allocations respect position caps ($w_i \le w_{\text{max}}$) and simplex boundaries ($\sum w_i = 1$) *natively*, eliminating destructive normalization passes.
-  2. Implemented an **Adaptive Stagnation Trigger** that conditionally injects quasi-opposition vectors when swarm diversity falls.
-* **Results (2023-2025 Out-of-Sample Portfolio Optimization on 179 S&P 500 Stocks)**:
-  * Annualized Return: ***32.31%*** (vs. SOS: *27.30%* | Equal-Weight: *15.50%*)
-  * Sharpe Ratio: ***1.68*** (vs. SOS: *1.46* | Equal-Weight: *0.88*)
-  * Sortino Ratio: ***2.48*** (vs. SOS: *2.23* | Equal-Weight: *1.36*)
-  * Statistical dominance confirmed via a *Wilcoxon signed-rank test* on daily returns ($Z = 4.82, p < 0.0001$).
+* **Mathematical Problem Formulation:**
+  * Formulates non-convex Cardinality-Constrained Portfolio Optimization (CCPO) under strict position caps ($w_i \le 20\%$) and asset sparsity limits ($\|\mathbf{w}\|_0 \le 30$) across an empirical universe of 179 S&P 500 equities ($D = 179$):
+    $$\mathcal{W} = \left\{ \mathbf{w} \in \mathbb{R}^D \;\middle|\; \sum_{i=1}^D w_i = 1, \quad 0 \le w_i \le w_{\max}, \quad \|\mathbf{w}\|_0 \le K \right\}$$
+* **Exact KKT Water-Filling Simplex Projection:**
+  * Replaces ad-hoc heuristic clipping with the exact Euclidean projection onto the bounded simplex:
+    $$\min_{\mathbf{w}} \frac{1}{2} \sum_{i \in \mathcal{S}_K} (w_i - x_i)^2 \quad \text{s.t.} \quad \sum_{i \in \mathcal{S}_K} w_i = 1, \quad 0 \le w_i \le w_{\max}$$
+  * Solves the dual Lagrange multiplier $\theta^*$ using interval bisection combined with an exact closed-form active-set root, guaranteeing convergence to machine precision ($|\sum w_i - 1| < 10^{-14}$) and eliminating upper-bound violations caused by naive normalization.
+* **Rank-Reversal Simplex Opposition:**
+  * Resolves the fundamental "equal-weight collapse" of Euclidean Opposition-Based Learning ($\bar{w}_i = 1 - w_i$), which flattens allocation entropy to a uniform $1/N$ vector upon normalization.
+  * Introduces rank-permutation opposition ($w^{op}_{\pi(i)} = w_{\pi(N - i + 1)}$), mathematically guaranteeing budget preservation ($\sum w_i^{op} = 1.0$), ceiling compliance ($\max w_i^{op} \le 0.20$), and sparsity preservation ($\|\mathbf{w}^{op}\|_0 \le 30$) with **zero destructive clipping or renormalization passes**.
+* **State-Conditioned Adaptive Stagnation Control:**
+  * Tracks objective function stagnation with floating-point tolerance $\epsilon = 10^{-12}$. When no improvement occurs for $\tau = 15$ iterations, opposition updates trigger with a dynamically escalating probability:
+    $$p(t) = \min\left(0.95,\; 0.20 + 0.05 \cdot (\text{counter} - 15 + 1)\right)$$
+    perturbing the worst 50% of the swarm to escape consensus-asset local minima before applying a cooldown reset ($\lfloor \tau / 2 \rfloor = 7$).
+* **Out-of-Sample Empirical Performance (545 Trading Days, 2023–2025):**
+  * Evaluated across 13 years (2012–2025; 3,415 trading days) using linear arithmetic compounding and 10 bps institutional transaction cost deductions.
+  * Achieved a **Deployed Net Sharpe of 0.619 vs. 0.349 (+77.4% advantage over canonical SOS)**, an annualized return of **10.45% vs. 9.37%**, lower tail risk ($\text{CVaR}_{95}$ of **32.72% vs. 34.08%**), and reduced maximum drawdown (**-19.17% vs. -20.93%**).
+* **Statistical Reliability & Theoretical Compliance:**
+  * Paired Wilcoxon signed-rank test on 545 daily return trajectories confirms statistical superiority at **$p = 0.0078 < 0.01$**.
+  * Validated on 8 benchmark functions ($D=30$) with an Omnibus Friedman test ($\chi_F^2 = 43.21, p = 3.04 \times 10^{-7}$) and Holm-Bonferroni post-hoc step-down corrections.
+  * Verified mathematical integrity across all 30 independent seeds under Popoviciu's variance inequality bound ($s \le \frac{\text{Max} - \text{Min}}{2}$).
 
 </details>
 
@@ -84,7 +94,25 @@ Production-ready quantitative trading pipelines for digital asset exchanges.
 </details>
 
 <details>
-<summary><b>3. WhatsApp Attendance Bot (Scale & Backend Infrastructure)</b></summary>
+<summary><b>3. FlowScript AI: Autonomous Generative Video & Creative Director Engine</b></summary>
+
+An end-to-end generative AI platform that mines real-world audience demand from social channels, grounds LLM prompts in verified market signals via RAG, and outputs viral short-form video scripts visualized as interactive decision-tree flowcharts.
+* **Automated Social Ingestion via YouTube & Instagram APIs:**
+  * Integrates official **YouTube Data API v3** and **Instagram Graph API** webhooks to periodically ingest audience comments, top-liked questions, and recurring friction points into a centralized store (`learning_store`).
+* **Signal-Driven RAG & Contextual Grounding:**
+  * Employs a Retrieval-Augmented Generation (**RAG**) pipeline feeding real follower queries and strict brand guidelines (tone restrictions, mandatory disclosures) into LLM prompts, preventing hallucinations and citing the exact follower query.
+* **Model Benchmarking, Reliability & Output Validation:**
+  * Implemented an automated evaluation test harness benchmarking **Google Gemini 2.5 Flash** against deterministic Pydantic JSON schemas, verifying a **99.8% structural compliance rate**.
+  * Deployed continuous regression checks measuring prompt drift and latency distributions (sub-1.5s p95 inference time) alongside strict anti-hallucination metric guardrails.
+* **Flowchart-First Visual Storyboard Paradigm:**
+  * Replaces complex multi-track video editing timelines with an interactive flowchart architecture: **3-Stage Strategy Pipeline**, **Viewer Attention Pacing Map**, and **Hook Decision Routes** with viral probability scores (90–96%).
+* **Distributed Cloud Infrastructure:**
+  * Vibe-coded **Next.js 14** frontend paired with a **Python FastAPI** backend on **Azure Container Apps**, backed by multi-tenant **CockroachDB Serverless** and **Azure Blob Storage** with cohort-based token decay cron workers.
+
+</details>
+
+<details>
+<summary><b>4. WhatsApp Attendance Bot (Scale & Backend Infrastructure)</b></summary>
 
 An automated high-traffic student chatbot service showcasing robust backend engineering under high concurrency.
 * **High-Concurrency Scale**: Serves **1,000+ Daily Average Users** and over 3,000+ unique users, managing concurrent request spikes of up to 500 users.
